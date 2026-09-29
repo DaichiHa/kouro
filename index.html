@@ -14,18 +14,19 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 .b.on{background:var(--on);color:var(--onink);border-color:var(--on)}
 .c.done{opacity:.72}
 .f{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:2px solid var(--line);padding:8px 12px}
-.f .m{font-size:13px;margin-bottom:6px}.go{width:100%;padding:13px;border:0;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}
+.f .m{font-size:13px;margin-bottom:6px}.go{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}.go.off{background:var(--line);color:var(--sub)}.a{font:12px monospace;color:var(--sub);margin-top:4px;word-break:break-all}
 .pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
 @keyframes up{to{transform:translateY(-50px);opacity:0}}
 </style></head><body>
 <div class="k">大 交 易 時 代</div><h1>港の依頼</h1>
 <div id="st" class="st"></div><div id="qs"></div>
-<div class="f"><div class="m" id="m"></div><button class="go" id="go">まとめて送る（メールが開く → 送信）</button></div>
+<div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#">まず1つ選ぶ</a><div class="a" id="a"></div></div>
 <script>
 const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-async function load(){let h=location.hash.slice(1).replace(/-/g,"+").replace(/_/g,"/");h+="===".slice((h.length+3)%4);
+async function load(){let h=location.hash.slice(1);const raw=h[0]==="r";if(raw)h=h.slice(1);h=h.replace(/-/g,"+").replace(/_/g,"/");h+="===".slice((h.length+3)%4);
  const b=Uint8Array.from(atob(h),c=>c.charCodeAt(0));
+ if(raw)return JSON.parse(new TextDecoder().decode(b));
  const s=new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"));return JSON.parse(await new Response(s).text())}
 load().then(D=>{
  const K="kouro-"+D.d+"-"+D.t;let P={};try{P=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){}
@@ -39,14 +40,16 @@ load().then(D=>{
   D.q.forEach(([n])=>document.getElementById("c"+n).classList.toggle("done",!!P[n]));
   const ks=Object.keys(P),xp=D.q.filter(q=>P[q[0]]).reduce((a,q)=>a+q[6],0)+Math.floor(ks.length/5)*100+(ks.length===D.q.length?300:0);
   document.getElementById("m").textContent=`選んだ ${ks.length}/${D.q.length}　見込み +${xp}XP　宝箱 ${Math.floor(ks.length/5)}個${ks.length===D.q.length?"　満載！":""}`;
+  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]).join(" "),g=document.getElementById("go");
+  document.getElementById("a").textContent=a?"送る中身："+a:"";
+  if(a){g.href="mailto:"+D.to+"?subject="+encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t)+"&body="+encodeURIComponent(a);g.textContent="まとめて送る（メールが開く → 送信）";g.classList.remove("off")}
+  else{g.href="#";g.textContent="まず1つ選ぶ";g.classList.add("off")}
   try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
  document.getElementById("qs").addEventListener("click",e=>{const b=e.target.closest(".b");if(!b)return;const n=b.dataset.n;
   const was=P[n];if(was===b.dataset.c)delete P[n];else{P[n]=b.dataset.c;if(!was){const p=document.createElement("div");p.className="pop";p.textContent="+"+b.dataset.xp;
   const r=b.getBoundingClientRect();p.style.left=r.left+"px";p.style.top=r.top+"px";document.body.appendChild(p);setTimeout(()=>p.remove(),900);
   if(Object.keys(P).length%5===0){p.textContent="宝箱！+100"}}}paint()});
- document.getElementById("go").onclick=()=>{const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]).join(" ");
-  if(!a){alert("まだ1つも選んでいません");return}
-  location.href="mailto:"+D.to+"?subject="+encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t)+"&body="+encodeURIComponent(a)};
+ document.getElementById("go").addEventListener("click",e=>{if(e.currentTarget.classList.contains("off"))e.preventDefault()});
  paint();
-}).catch(e=>{document.getElementById("qs").textContent="依頼が読めませんでした（メールのリンクを開き直してください）"});
+}).catch(e=>{document.getElementById("qs").textContent="依頼が読めませんでした："+e+"（Chrome か Safari で開き直す）"});
 </script></body></html>
