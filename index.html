@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>港の依頼</title>
+<style>
+:root{--bg:#f6efe0;--card:#fffdf7;--ink:#243746;--sub:#6b5638;--line:#d9c9a3;--gold:#9a6f06;--red:#9c3a2a;--on:#2d4a5c;--onink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#15191c;--card:#1f2529;--ink:#e8e2d4;--sub:#b9a98a;--line:#3a4247;--gold:#e0b64a;--red:#e07a66;--on:#e0b64a;--onink:#15191c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Hiragino Mincho ProN","Yu Mincho",serif;padding:12px 12px 110px}
+h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:11px;letter-spacing:4px;color:var(--sub)}
+.st{border:2px solid var(--ink);border-radius:10px;padding:8px 12px;margin:10px 0;font-size:13px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+.c.star{border:2px solid var(--gold)}.h{font-size:12px;color:var(--sub);font-weight:bold;display:flex;justify-content:space-between}
+.x{font-size:12px;color:var(--sub);margin:4px 0;border-left:3px solid var(--line);padding-left:8px}
+.b{display:inline-block;margin:4px 6px 0 0;padding:10px 14px;border:2px solid var(--ink);border-radius:9px;background:transparent;color:var(--ink);font:bold 15px sans-serif}
+.b.on{background:var(--on);color:var(--onink);border-color:var(--on)}
+.c.done{opacity:.72}
+.f{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:2px solid var(--line);padding:8px 12px}
+.f .m{font-size:13px;margin-bottom:6px}.go{width:100%;padding:13px;border:0;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}
+.pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
+@keyframes up{to{transform:translateY(-50px);opacity:0}}
+</style></head><body>
+<div class="k">大 交 易 時 代</div><h1>港の依頼</h1>
+<div id="st" class="st"></div><div id="qs"></div>
+<div class="f"><div class="m" id="m"></div><button class="go" id="go">まとめて送る（メールが開く → 送信）</button></div>
+<script>
+const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function load(){let h=location.hash.slice(1).replace(/-/g,"+").replace(/_/g,"/");h+="===".slice((h.length+3)%4);
+ const b=Uint8Array.from(atob(h),c=>c.charCodeAt(0));
+ const s=new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"));return JSON.parse(await new Response(s).text())}
+load().then(D=>{
+ const K="kouro-"+D.d+"-"+D.t;let P={};try{P=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){}
+ const [rk,lv,cur,nx,gold,stk,dex,ndex,cat]=D.s;
+ document.getElementById("st").innerHTML=`${esc(rk)} Lv${lv}　${bar(cur,nx)} ${cur}/${nx}<br>金貨 ${gold.toLocaleString()}　連続 ${stk}日　図鑑 ${dex}/${ndex}<br>分類の調整の解放まで ${bar(cat,30)} ${cat}/30`;
+ document.getElementById("qs").innerHTML=D.q.map(([n,k,star,t,cx,op,xp])=>`<div class="c${star?" star":""}" id="c${n}">
+  <div class="h"><span>【${String(n).padStart(2,"0")}】${star?"★":""}${esc(k)}</span><span style="color:var(--gold)">+${xp}XP</span></div>
+  <div>${esc(t)}</div>${cx?`<div class="x">${esc(cx)}</div>`:""}
+  ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}</div>`).join("");
+ const paint=()=>{document.querySelectorAll(".b").forEach(b=>b.classList.toggle("on",P[b.dataset.n]===b.dataset.c));
+  D.q.forEach(([n])=>document.getElementById("c"+n).classList.toggle("done",!!P[n]));
+  const ks=Object.keys(P),xp=D.q.filter(q=>P[q[0]]).reduce((a,q)=>a+q[6],0)+Math.floor(ks.length/5)*100+(ks.length===D.q.length?300:0);
+  document.getElementById("m").textContent=`選んだ ${ks.length}/${D.q.length}　見込み +${xp}XP　宝箱 ${Math.floor(ks.length/5)}個${ks.length===D.q.length?"　満載！":""}`;
+  try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
+ document.getElementById("qs").addEventListener("click",e=>{const b=e.target.closest(".b");if(!b)return;const n=b.dataset.n;
+  const was=P[n];if(was===b.dataset.c)delete P[n];else{P[n]=b.dataset.c;if(!was){const p=document.createElement("div");p.className="pop";p.textContent="+"+b.dataset.xp;
+  const r=b.getBoundingClientRect();p.style.left=r.left+"px";p.style.top=r.top+"px";document.body.appendChild(p);setTimeout(()=>p.remove(),900);
+  if(Object.keys(P).length%5===0){p.textContent="宝箱！+100"}}}paint()});
+ document.getElementById("go").onclick=()=>{const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]).join(" ");
+  if(!a){alert("まだ1つも選んでいません");return}
+  location.href="mailto:"+D.to+"?subject="+encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t)+"&body="+encodeURIComponent(a)};
+ paint();
+}).catch(e=>{document.getElementById("qs").textContent="依頼が読めませんでした（メールのリンクを開き直してください）"});
+</script></body></html>
