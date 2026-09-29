@@ -23,7 +23,15 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 <script>
 const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-async function load(){let h=location.hash.slice(1);const raw=h[0]==="r";if(raw)h=h.slice(1);h=h.replace(/-/g,"+").replace(/_/g,"/");h+="===".slice((h.length+3)%4);
+async function load(){let h=location.hash.slice(1);
+ if(h.length<10){const u=new URLSearchParams(location.search),k=u.get("k"),t=u.get("t");   // # の後ろが落ちた時は、PC が置いた控えを読む
+  if(!k||!t)throw new Error("リンクの中身が届いていない");
+  const r=await fetch("https://ntfy.sh/"+k+"/json?poll=1&since=all");
+  const L=(await r.text()).split("\n").filter(Boolean).map(x=>{try{return JSON.parse(x)}catch(e){return null}}).filter(m=>m&&m.event==="message"&&(m.message||"").startsWith("KQ "+t+" "));
+  if(!L.length)throw new Error("中身の控えが見つからない（12時間を過ぎた？ PC で py -3 ops\\kouro.py --send）");
+  const P={};let n=0;L.forEach(m=>{const a=m.message.split(" "),ij=a[2].split("/");P[+ij[0]]=a[3];n=+ij[1]});
+  h=Array.from({length:n},(_,i)=>P[i+1]||"").join("")}
+ const raw=h[0]==="r";if(raw)h=h.slice(1);h=h.replace(/-/g,"+").replace(/_/g,"/");h+="===".slice((h.length+3)%4);
  const b=Uint8Array.from(atob(h),c=>c.charCodeAt(0));
  if(raw)return JSON.parse(new TextDecoder().decode(b));
  const s=new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"));return JSON.parse(await new Response(s).text())}
