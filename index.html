@@ -36,13 +36,13 @@ load().then(D=>{
   <div>${esc(f[3])}</div>`+q.map(([n,k,st,t,cx,op,xp,inp,sub,g,w,ph,dc])=>`<div id="c${n}" class="r">${sub?`<div class="q">${esc(sub)}</div>`:""}${cx?`<div class="x">${esc(cx)}</div>`:""}
   ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}${inp?(ph?`<textarea class="w" rows="3" data-n="${n}" data-dc="${esc(dc||"")}" placeholder="${esc(ph)}">${esc(W[n]!=null?W[n]:(w||""))}</textarea>`:`<input class="w" data-n="${n}" placeholder="社名に入りそうな語（例：指輪,宝石）" value="${esc(W[n]!=null?W[n]:(w||""))}">`):""}</div>`).join("")+`</div>`}).join("");
  document.getElementById("qs").addEventListener("input",e=>{const w=e.target.closest(".w");if(!w)return;W[w.dataset.n]=w.tagName==="TEXTAREA"?w.value:w.value.replace(/[\s｜~]/g,"");
-  if(w.dataset.dc&&W[w.dataset.n].trim()&&!P[w.dataset.n])P[w.dataset.n]=w.dataset.dc;   // 書いただけでも送れる（その他）try{localStorage.setItem(K+"-w",JSON.stringify(W))}catch(x){}paint()});
+  if(w.dataset.dc&&W[w.dataset.n].trim()&&!P[w.dataset.n])P[w.dataset.n]=w.dataset.dc;try{localStorage.setItem(K+"-w",JSON.stringify(W))}catch(x){}paint()});
  const paint=()=>{document.querySelectorAll(".b").forEach(b=>b.classList.toggle("on",P[b.dataset.n]===b.dataset.c));
   D.q.forEach(([n])=>document.getElementById("c"+n).classList.toggle("done",!!P[n]));
   const ks=Object.keys(P),xp=D.q.filter(q=>P[q[0]]).reduce((a,q)=>a+q[6],0)+Math.floor(ks.length/5)*100+(ks.length===D.q.length?300:0);
   document.getElementById("m").textContent=`選んだ ${ks.length}/${D.q.length}　見込み +${xp}XP　宝箱 ${Math.floor(ks.length/5)}個${ks.length===D.q.length?"　満載！":""}`;
   const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]+(W[n]&&W[n].trim()?"~"+encodeURIComponent(W[n].trim()):"")).join(" "),g=document.getElementById("go");
-  document.getElementById("a").textContent=a?"送る中身："+a:"";
+  document.getElementById("a").textContent=a?"送る中身："+decodeURIComponent(a):"";
   const su=encodeURIComponent("Re: 回答メール ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
   document.getElementById("mt").href="mailto:"+D.to+"?subject="+su+"&body="+bo;
   document.getElementById("gm").href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;
