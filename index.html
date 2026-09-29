@@ -14,12 +14,12 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 .b.on{background:var(--on);color:var(--onink);border-color:var(--on)}
 .c.done{opacity:.72}
 .f{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:2px solid var(--line);padding:8px 12px}
-.f .m{font-size:13px;margin-bottom:6px}.go{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}.go.off{background:var(--line);color:var(--sub)}.a{font:12px monospace;color:var(--sub);margin-top:4px;word-break:break-all}
+.f .m{font-size:13px;margin-bottom:6px}.go{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}.go.off{background:var(--line);color:var(--sub)}.go.busy{opacity:.6}.go.sent{background:transparent;color:var(--red);border:2px solid var(--red)}.go.lock{pointer-events:none}.lockall .b{pointer-events:none}.a{font:12px monospace;color:var(--sub);margin-top:4px;word-break:break-all}
 .pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
 @keyframes up{to{transform:translateY(-50px);opacity:0}}
 </style></head><body>
 <div id="qs"></div>
-<div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#" target="_blank" rel="noopener">まず1つ選ぶ</a><div class="a" id="a"></div><div class="a"><a id="mt" href="#">メールアプリで送る</a></div></div>
+<div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#">まず1つ選ぶ</a><div class="a" id="a"></div><div class="a" id="fb" hidden>送れない時：<a id="gm" href="#" target="_blank" rel="noopener">Gmail で送る</a>／<a id="mt" href="#">メールアプリで送る</a></div></div>
 <script>
 const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -28,7 +28,7 @@ async function load(){let h=location.hash.slice(1);const raw=h[0]==="r";if(raw)h
  if(raw)return JSON.parse(new TextDecoder().decode(b));
  const s=new Blob([b]).stream().pipeThrough(new DecompressionStream("deflate-raw"));return JSON.parse(await new Response(s).text())}
 load().then(D=>{
- const K="kouro-"+D.d+"-"+D.t;let P={};try{P=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){}
+ const K="kouro-"+D.d+"-"+D.t;let P={},SENT=0;try{P=JSON.parse(localStorage.getItem(K)||"{}");SENT=+localStorage.getItem(K+"-sent")||0}catch(e){}
  const [rk,lv,cur,nx,gold,stk,dex,ndex,cat]=D.s;
  document.getElementById("qs").innerHTML=D.q.map(([n,k,star,t,cx,op,xp])=>`<div class="c${star?" star":""}" id="c${n}">
   <div class="h"><span>【${String(n).padStart(2,"0")}】${star?"★":""}${esc(k)}</span><span style="color:var(--gold)">+${xp}XP</span></div>
@@ -42,14 +42,22 @@ load().then(D=>{
   document.getElementById("a").textContent=a?"送る中身："+a:"";
   const su=encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
   document.getElementById("mt").href="mailto:"+D.to+"?subject="+su+"&body="+bo;
-  if(a){g.href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;g.textContent="まとめて送る（Gmail が開く → 送信）";g.classList.remove("off")}
+  document.getElementById("gm").href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;
+  if(SENT){g.textContent="送りました ✓　報酬は数分でメールに届く";g.className="go sent lock";document.body.classList.add("lockall");return}
+  if(a){g.textContent="まとめて送る";g.classList.remove("off")}
   else{g.href="#";g.textContent="まず1つ選ぶ";g.classList.add("off")}
   try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
  document.getElementById("qs").addEventListener("click",e=>{const b=e.target.closest(".b");if(!b)return;const n=b.dataset.n;
   const was=P[n];if(was===b.dataset.c)delete P[n];else{P[n]=b.dataset.c;if(!was){const p=document.createElement("div");p.className="pop";p.textContent="+"+b.dataset.xp;
   const r=b.getBoundingClientRect();p.style.left=r.left+"px";p.style.top=r.top+"px";document.body.appendChild(p);setTimeout(()=>p.remove(),900);
   if(Object.keys(P).length%5===0){p.textContent="宝箱！+100"}}}paint()});
- document.getElementById("go").addEventListener("click",e=>{if(e.currentTarget.classList.contains("off"))e.preventDefault()});
+ document.getElementById("go").addEventListener("click",async e=>{e.preventDefault();const g=e.currentTarget;
+  if(g.classList.contains("off")||g.classList.contains("lock"))return;          // 二度押しを止める
+  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]).join(" ");
+  g.classList.add("lock","busy");g.textContent="送っています…";
+  try{const r=await fetch("https://ntfy.sh/"+D.nt,{method:"POST",body:"KOURO "+D.d+"-"+D.t+"\n"+a});if(!r.ok)throw new Error(r.status);
+   SENT=1;try{localStorage.setItem(K+"-sent","1")}catch(x){}g.classList.remove("busy");paint()}
+  catch(x){g.classList.remove("lock","busy");g.textContent="送れませんでした（もう一度押す）";document.getElementById("fb").hidden=false}});
  paint();
 }).catch(e=>{document.getElementById("qs").textContent="依頼が読めませんでした："+e+"（Chrome か Safari で開き直す）"});
 </script></body></html>
