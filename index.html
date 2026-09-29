@@ -12,10 +12,10 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 .x{font-size:12px;color:var(--sub);margin:4px 0;border-left:3px solid var(--line);padding-left:8px}
 .b{display:inline-block;margin:4px 6px 0 0;padding:10px 14px;border:2px solid var(--ink);border-radius:9px;background:transparent;color:var(--ink);font:bold 15px sans-serif}
 .b.on{background:var(--on);color:var(--onink);border-color:var(--on)}
-.c.done{opacity:.72}
+
 .f{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:2px solid var(--line);padding:8px 12px}
 .f .m{font-size:13px;margin-bottom:6px}.go{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:10px;background:var(--red);color:#fff;font:bold 17px sans-serif}.go.off{background:var(--line);color:var(--sub)}.go.busy{opacity:.6}.go.sent{background:transparent;color:var(--red);border:2px solid var(--red)}.go.lock{pointer-events:none}.lockall .b{pointer-events:none}.a{font:12px monospace;color:var(--sub);margin-top:4px;word-break:break-all}
-.w{width:100%;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font-size:15px}.q{font-size:12px;color:var(--gold);font-weight:bold;margin-top:2px}.pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
+.w{width:100%;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--ink);font-size:15px}.q{font-size:12px;color:var(--gold);font-weight:bold;margin-top:8px}.r.done{opacity:.72}.pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
 @keyframes up{to{transform:translateY(-50px);opacity:0}}
 </style></head><body>
 <div id="qs"></div>
@@ -30,10 +30,11 @@ async function load(){let h=location.hash.slice(1);const raw=h[0]==="r";if(raw)h
 load().then(D=>{
  const K="kouro-"+D.d+"-"+D.t;let P={},W={},SENT=0;try{P=JSON.parse(localStorage.getItem(K)||"{}");W=JSON.parse(localStorage.getItem(K+"-w")||"{}");SENT=+localStorage.getItem(K+"-sent")||0}catch(e){}
  const [rk,lv,cur,nx,gold,stk,dex,ndex,cat]=D.s;
- document.getElementById("qs").innerHTML=D.q.map(([n,k,star,t,cx,op,xp,inp,sub])=>`<div class="c${star?" star":""}" id="c${n}">
-  <div class="h"><span>【${String(n).padStart(2,"0")}】${star?"★":""}${esc(k)}</span><span style="color:var(--gold)">+${xp}XP</span></div>
-  <div>${esc(t)}</div>${sub?`<div class="q">${esc(sub)}</div>`:""}${cx?`<div class="x">${esc(cx)}</div>`:""}
-  ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}${inp?`<input class="w" data-n="${n}" placeholder="社名に入りそうな語（例：指輪,宝石）" value="${esc(W[n]||"")}">`:""}</div>`).join("");
+ const G=[];D.q.forEach(q=>{const g=q[9]||("n"+q[0]),L=G[G.length-1];if(L&&L.g===g)L.q.push(q);else G.push({g,q:[q]})});   // 同じ案は1枚
+ document.getElementById("qs").innerHTML=G.map(({q})=>{const f=q[0],star=q.some(x=>x[2]);return `<div class="c${star?" star":""}">
+  <div class="h"><span>【${String(f[0]).padStart(2,"0")}】${star?"★":""}${esc(f[1])}</span><span style="color:var(--gold)">+${q.reduce((a,x)=>a+x[6],0)}XP</span></div>
+  <div>${esc(f[3])}</div>`+q.map(([n,k,st,t,cx,op,xp,inp,sub,g,w])=>`<div id="c${n}" class="r">${sub?`<div class="q">${esc(sub)}</div>`:""}${cx?`<div class="x">${esc(cx)}</div>`:""}
+  ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}${inp?`<input class="w" data-n="${n}" placeholder="社名に入りそうな語（例：指輪,宝石）" value="${esc(W[n]!=null?W[n]:(w||""))}">`:""}</div>`).join("")+`</div>`}).join("");
  document.getElementById("qs").addEventListener("input",e=>{const w=e.target.closest(".w");if(!w)return;W[w.dataset.n]=w.value.replace(/[\s｜~]/g,"");try{localStorage.setItem(K+"-w",JSON.stringify(W))}catch(x){}paint()});
  const paint=()=>{document.querySelectorAll(".b").forEach(b=>b.classList.toggle("on",P[b.dataset.n]===b.dataset.c));
   D.q.forEach(([n])=>document.getElementById("c"+n).classList.toggle("done",!!P[n]));
