@@ -18,8 +18,7 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 .pop{position:fixed;font:bold 18px sans-serif;color:var(--gold);pointer-events:none;animation:up .9s ease-out forwards}
 @keyframes up{to{transform:translateY(-50px);opacity:0}}
 </style></head><body>
-<div class="k">大 交 易 時 代</div><h1>港の依頼</h1>
-<div id="st" class="st"></div><div id="qs"></div>
+<div id="qs"></div>
 <div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#">まず1つ選ぶ</a><div class="a" id="a"></div></div>
 <script>
 const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
@@ -31,7 +30,6 @@ async function load(){let h=location.hash.slice(1);const raw=h[0]==="r";if(raw)h
 load().then(D=>{
  const K="kouro-"+D.d+"-"+D.t;let P={};try{P=JSON.parse(localStorage.getItem(K)||"{}")}catch(e){}
  const [rk,lv,cur,nx,gold,stk,dex,ndex,cat]=D.s;
- document.getElementById("st").innerHTML=`${esc(rk)} Lv${lv}　${bar(cur,nx)} ${cur}/${nx}<br>金貨 ${gold.toLocaleString()}　連続 ${stk}日　図鑑 ${dex}/${ndex}<br>分類の調整の解放まで ${bar(cat,30)} ${cat}/30`;
  document.getElementById("qs").innerHTML=D.q.map(([n,k,star,t,cx,op,xp])=>`<div class="c${star?" star":""}" id="c${n}">
   <div class="h"><span>【${String(n).padStart(2,"0")}】${star?"★":""}${esc(k)}</span><span style="color:var(--gold)">+${xp}XP</span></div>
   <div>${esc(t)}</div>${cx?`<div class="x">${esc(cx)}</div>`:""}
