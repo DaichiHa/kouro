@@ -43,7 +43,7 @@ load().then(D=>{
   const su=encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
   document.getElementById("mt").href="mailto:"+D.to+"?subject="+su+"&body="+bo;
   document.getElementById("gm").href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;
-  if(SENT){g.textContent="送りました ✓　報酬は数分でメールに届く";g.className="go sent lock";document.body.classList.add("lockall");return}
+  if(SENT){g.textContent="送りました ✓";g.className="go sent lock";document.body.classList.add("lockall");return}
   if(a){g.textContent="まとめて送る";g.classList.remove("off")}
   else{g.href="#";g.textContent="まず1つ選ぶ";g.classList.add("off")}
   try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
