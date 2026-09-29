@@ -19,7 +19,7 @@ h1{font-size:20px;text-align:center;margin:4px 0}.k{text-align:center;font-size:
 @keyframes up{to{transform:translateY(-50px);opacity:0}}
 </style></head><body>
 <div id="qs"></div>
-<div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#">まず1つ選ぶ</a><div class="a" id="a"></div></div>
+<div class="f"><div class="m" id="m"></div><a class="go off" id="go" href="#" target="_blank" rel="noopener">まず1つ選ぶ</a><div class="a" id="a"></div><div class="a"><a id="mt" href="#">メールアプリで送る</a></div></div>
 <script>
 const bar=(a,b,w=10)=>{const k=Math.max(0,Math.min(w,Math.round(w*a/Math.max(1,b))));return "■".repeat(k)+"□".repeat(w-k)};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -40,7 +40,9 @@ load().then(D=>{
   document.getElementById("m").textContent=`選んだ ${ks.length}/${D.q.length}　見込み +${xp}XP　宝箱 ${Math.floor(ks.length/5)}個${ks.length===D.q.length?"　満載！":""}`;
   const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]).join(" "),g=document.getElementById("go");
   document.getElementById("a").textContent=a?"送る中身："+a:"";
-  if(a){g.href="mailto:"+D.to+"?subject="+encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t)+"&body="+encodeURIComponent(a);g.textContent="まとめて送る（メールが開く → 送信）";g.classList.remove("off")}
+  const su=encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
+  document.getElementById("mt").href="mailto:"+D.to+"?subject="+su+"&body="+bo;
+  if(a){g.href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;g.textContent="まとめて送る（Gmail が開く → 送信）";g.classList.remove("off")}
   else{g.href="#";g.textContent="まず1つ選ぶ";g.classList.add("off")}
   try{localStorage.setItem(K,JSON.stringify(P))}catch(e){}};
  document.getElementById("qs").addEventListener("click",e=>{const b=e.target.closest(".b");if(!b)return;const n=b.dataset.n;
