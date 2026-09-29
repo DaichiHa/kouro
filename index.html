@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>港の依頼</title>
+<title>回答メール</title>
 <style>
 :root{--bg:#f6efe0;--card:#fffdf7;--ink:#243746;--sub:#6b5638;--line:#d9c9a3;--gold:#9a6f06;--red:#9c3a2a;--on:#2d4a5c;--onink:#fff}
 @media (prefers-color-scheme:dark){:root{--bg:#15191c;--card:#1f2529;--ink:#e8e2d4;--sub:#b9a98a;--line:#3a4247;--gold:#e0b64a;--red:#e07a66;--on:#e0b64a;--onink:#15191c}}
@@ -33,16 +33,17 @@ load().then(D=>{
  const G=[];D.q.forEach(q=>{const g=q[9]||("n"+q[0]),L=G[G.length-1];if(L&&L.g===g)L.q.push(q);else G.push({g,q:[q]})});   // 同じ案は1枚
  document.getElementById("qs").innerHTML=G.map(({q})=>{const f=q[0],star=q.some(x=>x[2]);return `<div class="c${star?" star":""}">
   <div class="h"><span>【${String(f[0]).padStart(2,"0")}】${star?"★":""}${esc(f[1])}</span><span style="color:var(--gold)">+${q.reduce((a,x)=>a+x[6],0)}XP</span></div>
-  <div>${esc(f[3])}</div>`+q.map(([n,k,st,t,cx,op,xp,inp,sub,g,w])=>`<div id="c${n}" class="r">${sub?`<div class="q">${esc(sub)}</div>`:""}${cx?`<div class="x">${esc(cx)}</div>`:""}
-  ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}${inp?`<input class="w" data-n="${n}" placeholder="社名に入りそうな語（例：指輪,宝石）" value="${esc(W[n]!=null?W[n]:(w||""))}">`:""}</div>`).join("")+`</div>`}).join("");
- document.getElementById("qs").addEventListener("input",e=>{const w=e.target.closest(".w");if(!w)return;W[w.dataset.n]=w.value.replace(/[\s｜~]/g,"");try{localStorage.setItem(K+"-w",JSON.stringify(W))}catch(x){}paint()});
+  <div>${esc(f[3])}</div>`+q.map(([n,k,st,t,cx,op,xp,inp,sub,g,w,ph,dc])=>`<div id="c${n}" class="r">${sub?`<div class="q">${esc(sub)}</div>`:""}${cx?`<div class="x">${esc(cx)}</div>`:""}
+  ${op.map(([c,l])=>`<button class="b" data-n="${n}" data-c="${esc(c)}" data-xp="${xp}">${esc(l)}</button>`).join("")}${inp?(ph?`<textarea class="w" rows="3" data-n="${n}" data-dc="${esc(dc||"")}" placeholder="${esc(ph)}">${esc(W[n]!=null?W[n]:(w||""))}</textarea>`:`<input class="w" data-n="${n}" placeholder="社名に入りそうな語（例：指輪,宝石）" value="${esc(W[n]!=null?W[n]:(w||""))}">`):""}</div>`).join("")+`</div>`}).join("");
+ document.getElementById("qs").addEventListener("input",e=>{const w=e.target.closest(".w");if(!w)return;W[w.dataset.n]=w.tagName==="TEXTAREA"?w.value:w.value.replace(/[\s｜~]/g,"");
+  if(w.dataset.dc&&W[w.dataset.n].trim()&&!P[w.dataset.n])P[w.dataset.n]=w.dataset.dc;   // 書いただけでも送れる（その他）try{localStorage.setItem(K+"-w",JSON.stringify(W))}catch(x){}paint()});
  const paint=()=>{document.querySelectorAll(".b").forEach(b=>b.classList.toggle("on",P[b.dataset.n]===b.dataset.c));
   D.q.forEach(([n])=>document.getElementById("c"+n).classList.toggle("done",!!P[n]));
   const ks=Object.keys(P),xp=D.q.filter(q=>P[q[0]]).reduce((a,q)=>a+q[6],0)+Math.floor(ks.length/5)*100+(ks.length===D.q.length?300:0);
   document.getElementById("m").textContent=`選んだ ${ks.length}/${D.q.length}　見込み +${xp}XP　宝箱 ${Math.floor(ks.length/5)}個${ks.length===D.q.length?"　満載！":""}`;
-  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]+(W[n]?"~"+W[n]:"")).join(" "),g=document.getElementById("go");
+  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]+(W[n]&&W[n].trim()?"~"+encodeURIComponent(W[n].trim()):"")).join(" "),g=document.getElementById("go");
   document.getElementById("a").textContent=a?"送る中身："+a:"";
-  const su=encodeURIComponent("Re: 港の依頼 ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
+  const su=encodeURIComponent("Re: 回答メール ｜ KOURO "+D.d+"-"+D.t),bo=encodeURIComponent(a);
   document.getElementById("mt").href="mailto:"+D.to+"?subject="+su+"&body="+bo;
   document.getElementById("gm").href="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(D.to)+"&su="+su+"&body="+bo;
   if(SENT){g.textContent="送りました ✓";g.className="go sent lock";document.body.classList.add("lockall");document.querySelectorAll(".w").forEach(w=>w.disabled=true);return}
@@ -55,7 +56,7 @@ load().then(D=>{
   if(Object.keys(P).length%5===0){p.textContent="宝箱！+100"}}}paint()});
  document.getElementById("go").addEventListener("click",async e=>{e.preventDefault();const g=e.currentTarget;
   if(g.classList.contains("off")||g.classList.contains("lock"))return;          // 二度押しを止める
-  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]+(W[n]?"~"+W[n]:"")).join(" ");
+  const a=Object.keys(P).sort((x,y)=>x-y).map(n=>String(n).padStart(2,"0")+"="+P[n]+(W[n]&&W[n].trim()?"~"+encodeURIComponent(W[n].trim()):"")).join(" ");
   g.classList.add("lock","busy");g.textContent="送っています…";
   try{const r=await fetch("https://ntfy.sh/"+D.nt,{method:"POST",body:"KOURO "+D.d+"-"+D.t+"\n"+a});if(!r.ok)throw new Error(r.status);
    SENT=1;try{localStorage.setItem(K+"-sent","1")}catch(x){}g.classList.remove("busy");paint()}
